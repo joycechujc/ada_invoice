@@ -232,7 +232,19 @@
       doc.setFont(fontName, 'normal');
       doc.setFontSize(12);
       doc.text(`Invoice No 發票號碼：${form.get('invoiceNo')||''}`, margin, y);
-      doc.text(`Date 日期：${form.get('invoiceDate')||''}`, margin, y+7);
+      
+      // Format date to DD/MM/YYYY
+      const dateValue = form.get('invoiceDate') || '';
+      let formattedDate = dateValue;
+      if(dateValue) {
+        const date = new Date(dateValue);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        formattedDate = `${day}/${month}/${year}`;
+      }
+      
+      doc.text(`Date 日期：${formattedDate}`, margin, y+7);
       y += 18;
 
       // Client
@@ -330,11 +342,6 @@
       const xRight = 210 - margin;
       doc.text(label, xRight - (labelW + amtW), y + 8);
       doc.text(amt, xRight - amtW, y + 8);
-
-      // Footer (optional)
-      doc.setFont(fontName, 'normal');
-      doc.setFontSize(9);
-      doc.text('Thank you for your business. 謝謝惠顧。', margin, 297 - margin);
 
       // Save
       const fileName = `Invoice_${(form.get('invoiceNo')||'')}_${(form.get('invoiceDate')||'')}.pdf`;
