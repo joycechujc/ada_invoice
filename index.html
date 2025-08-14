@@ -275,7 +275,7 @@
 
       const tel = (form.get('clientTel')||'').trim();
       if(tel){ 
-        doc.text(`Phone: ${tel}`, margin, y); 
+        doc.text(tel, margin, y); 
         y += 15; 
       } else {
         y += 6;
