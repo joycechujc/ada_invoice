@@ -249,19 +249,22 @@
 
       // Client
       doc.setFont(fontName, 'bold');
-      doc.text('To 收件人：', margin, y); y+=7;
+      const toLabelWidth = doc.getTextWidth('To 收件人：');
+      doc.text('To 收件人：', margin, y);
       doc.setFont(fontName, 'normal');
-      const toLines = doc.splitTextToSize(form.get('clientTo')||'', 210 - margin*2);
-      doc.text(toLines, margin, y);
-      y += toLines.length*6 + 2;
+      const toLines = doc.splitTextToSize(form.get('clientTo')||'', 210 - margin*2 - toLabelWidth - 5);
+      doc.text(toLines, margin + toLabelWidth + 5, y);
+      y += Math.max(toLines.length*6, 6) + 12;
 
       const addr = (form.get('clientAddress')||'').trim();
       if(addr){
-        doc.setFont(fontName, 'bold'); doc.text('Address 地址：', margin, y); y+=7;
+        doc.setFont(fontName, 'bold'); 
+        const addrLabelWidth = doc.getTextWidth('Address 地址：');
+        doc.text('Address 地址：', margin, y);
         doc.setFont(fontName, 'normal');
-        const addrLines = doc.splitTextToSize(addr, 210 - margin*2);
-        doc.text(addrLines, margin, y);
-        y += addrLines.length*6 + 2;
+        const addrLines = doc.splitTextToSize(addr, 210 - margin*2 - addrLabelWidth - 5);
+        doc.text(addrLines, margin + addrLabelWidth + 5, y);
+        y += Math.max(addrLines.length*6, 6) + 12;
       }
 
       const tel = (form.get('clientTel')||'').trim();
@@ -269,8 +272,8 @@
         doc.setFont(fontName, 'bold'); 
         doc.text('Tel 電話：', margin, y); 
         doc.setFont(fontName, 'normal');
-        doc.text(tel, margin + doc.getTextWidth('Tel 電話：') + 2, y); 
-        y+=7; 
+        doc.text(tel, margin + doc.getTextWidth('Tel 電話：') + 5, y); 
+        y += 18; 
       }
 
       const attn = (form.get('clientAttn')||'').trim();
@@ -278,10 +281,10 @@
         doc.setFont(fontName, 'bold'); 
         doc.text('Attn 聯絡人：', margin, y);
         doc.setFont(fontName, 'normal');
-        doc.text(attn, margin + doc.getTextWidth('Attn 聯絡人：') + 2, y); 
-        y+=10; 
+        doc.text(attn, margin + doc.getTextWidth('Attn 聯絡人：') + 5, y); 
+        y += 18; 
       } else {
-        y += 3;
+        y += 6;
       }
 
       // Table
