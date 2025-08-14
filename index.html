@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Invoice Generator — 璨琪國際 Exquis International</title>
+  <title>Invoice Generator — 玲瓏國際 Exquis International</title>
 
   <!-- jsPDF + AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -49,7 +49,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>璨琪國際 Exquis International</h1>
+      <h1>玲瓏國際 Exquis International</h1>
       <p>Invoice Generator</p>
     </div>
 
@@ -88,7 +88,7 @@
             <input id="clientTel" name="clientTel" />
           </div>
           <div class="group">
-            <label for="clientAttn">Attn / 联絡人</label>
+            <label for="clientAttn">Attn / 聯絡人</label>
             <input id="clientAttn" name="clientAttn" />
           </div>
         </div>
@@ -223,7 +223,7 @@
       // Header
       doc.setFont(fontName, 'bold');
       doc.setFontSize(18);
-      doc.text('璨琪國際 Exquis International', margin, y);
+      doc.text('玲瓏國際 Exquis International', margin, y);
       doc.setFontSize(22);
       doc.text('INVOICE 發票', 210 - margin - doc.getTextWidth('INVOICE 發票'), y);
       y += 10;
@@ -264,9 +264,9 @@
       const attn = (form.get('clientAttn')||'').trim();
       if(attn){ 
         doc.setFont(fontName, 'bold'); 
-        doc.text('Attn 联絡人：', margin, y);
+        doc.text('Attn 聯絡人：', margin, y);
         doc.setFont(fontName, 'normal');
-        doc.text(attn, margin + doc.getTextWidth('Attn 联絡人：') + 2, y); 
+        doc.text(attn, margin + doc.getTextWidth('Attn 聯絡人：') + 2, y); 
         y+=10; 
       } else {
         y += 3;
