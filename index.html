@@ -31,7 +31,7 @@
     textarea{min-height:80px;resize:vertical}
 
     .items h2{display:flex;align-items:center;gap:8px}
-    .item-row{display:grid;grid-template-columns:80px 2fr 80px 100px 120px 140px 40px;gap:12px;align-items:end;margin:12px 0;padding:16px;border:2px solid #eef2f7;border-radius:12px;background:#fff}
+    .item-row{display:grid;grid-template-columns:80px 2fr 80px 120px 40px;gap:12px;align-items:end;margin:12px 0;padding:16px;border:2px solid #eef2f7;border-radius:12px;background:#fff}
     .item-row:hover{border-color:#c7d2fe;transform:translateY(-1px);transition:all .2s}
     .btn{border:0;border-radius:10px;padding:10px 16px;color:#fff;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));cursor:pointer}
     .btn.secondary{background:linear-gradient(135deg,#9ca3af,#6b7280)}
@@ -83,6 +83,12 @@
           </div>
         </div>
         <div class="row">
+          <div class="group full">
+            <label for="clientTel">Tel / 電話</label>
+            <input id="clientTel" name="clientTel" />
+          </div>
+        </div>
+        <div class="row">
           <div class="group">
             <label for="clientAttn">Attn / 聯絡人</label>
             <input id="clientAttn" name="clientAttn" />
@@ -96,6 +102,11 @@
         <button class="btn secondary" type="button" id="addItemBtn">Add Item</button>
       </div>
 
+      <div class="section">
+        <h2>Payment Method / 付款方式</h2>
+        <textarea id="paymentMethod" name="paymentMethod" rows="2"></textarea>
+      </div>
+
       <div class="total-card">
         <h3>Total Amount / 總金額</h3>
         <div id="totalAmount" class="total-amount">$0.00</div>
@@ -107,196 +118,134 @@
     </form>
   </div>
 
-  <script>
-    // ===== Utilities =====
-    const currency = (n)=> new Intl.NumberFormat('en-US',{style:'currency',currency:'HKD',minimumFractionDigits:2}).format(Number(n||0));
-    let itemCount = 0;
+<script>
+const embeddedFontBase64 = "VGhpcyBpcyBhIHBsYWNlaG9sZGVyIGZvciB0aGUgVFRGIGJpbmFyeSBkYXRhLg=="; // Replace with full Base64
 
-    window.addEventListener('load', ()=>{
-      addItem();
-      document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
-    });
+const currency = (n)=> new Intl.NumberFormat('en-US',{style:'currency',currency:'HKD',minimumFractionDigits:2}).format(Number(n||0));
+let itemCount = 0;
 
-    document.getElementById('addItemBtn').addEventListener('click', addItem);
-    document.getElementById('generateBtn').addEventListener('click', ()=> generatePDF().catch(err=>{alert('Failed to generate PDF: '+err.message);}));
+window.addEventListener('load', ()=>{
+  addItem();
+  document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+});
+document.getElementById('addItemBtn').addEventListener('click', addItem);
+document.getElementById('generateBtn').addEventListener('click', ()=> generatePDF().catch(err=>alert('Failed: '+err.message)));
 
-    function addItem(){
-      itemCount++;
-      const el = document.createElement('div');
-      el.className='item-row';
-      el.id = `item-${itemCount}`;
-      el.innerHTML = `
-        <div class="group"><label>Item No.</label><input name="itemNo" value="${itemCount}"/></div>
-        <div class="group"><label>Description / 描述</label><input name="description" required/></div>
-        <div class="group"><label>Qty / 數量</label><input type="number" name="qty" min="1" value="1" oninput="calculateTotal()" required/></div>
-        <div class="group"><label>Unit / 單位</label><input name="unit" value="pcs"/></div>
-        <div class="group"><label>Unit Price / 單價</label><input type="number" name="unitPrice" min="0" step="0.01" oninput="calculateTotal()" required/></div>
-        <div class="group"><label>Total / 小計</label><input name="itemTotal" readonly style="background:#f8fafc"/></div>
-        <div class="group"><label>&nbsp;</label><button type="button" class="btn remove" title="Remove" onclick="removeItem(${itemCount})">×</button></div>`;
-      document.getElementById('itemsContainer').appendChild(el);
-      calculateTotal();
-    }
+function addItem(){
+  itemCount++;
+  const el = document.createElement('div');
+  el.className='item-row';
+  el.id = `item-${itemCount}`;
+  el.innerHTML = `
+    <div class="group"><label>Item No.</label><input name="itemNo" value="${itemCount}"/></div>
+    <div class="group"><label>Description / 描述</label><input name="description" required/></div>
+    <div class="group"><label>Qty / 數量</label><input type="number" name="qty" min="1" value="1" oninput="calculateTotal()" required/></div>
+    <div class="group"><label>Unit Price / 單價</label><input type="number" name="unitPrice" min="0" step="0.01" oninput="calculateTotal()" required/></div>
+    <div class="group"><label>&nbsp;</label><button type="button" class="btn remove" title="Remove" onclick="removeItem(${itemCount})">×</button></div>`;
+  document.getElementById('itemsContainer').appendChild(el);
+  calculateTotal();
+}
 
-    function removeItem(id){
-      const row = document.getElementById(`item-${id}`);
-      if(row && document.querySelectorAll('.item-row').length>1){
-        row.remove();
-        calculateTotal();
-      }
-    }
+function removeItem(id){
+  const row = document.getElementById(`item-${id}`);
+  if(row && document.querySelectorAll('.item-row').length>1){
+    row.remove();
+    calculateTotal();
+  }
+}
 
-    function calculateTotal(){
-      let total = 0;
-      document.querySelectorAll('.item-row').forEach(row=>{
-        const qty = parseFloat(row.querySelector('[name="qty"]').value) || 0;
-        const price = parseFloat(row.querySelector('[name="unitPrice"]').value) || 0;
-        const sub = qty * price;
-        row.querySelector('[name="itemTotal"]').value = currency(sub).replace('HK$','');
-        total += sub;
-      });
-      document.getElementById('totalAmount').textContent = currency(total);
-    }
+function calculateTotal(){
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(row=>{
+    const qty = parseFloat(row.querySelector('[name="qty"]').value) || 0;
+    const price = parseFloat(row.querySelector('[name="unitPrice"]').value) || 0;
+    const sub = qty * price;
+    total += sub;
+  });
+  document.getElementById('totalAmount').textContent = currency(total);
+}
 
-    // ===== Font loader (CJK-safe) =====
-    // Place a TrueType font file (e.g., NotoSansTC-Regular.ttf) next to this HTML, or change the URL below.
-    async function ensureCJKFont(doc){
-      const fontName = 'NotoSansTC';
-      if(doc.getFontList && doc.getFontList()[fontName]){
-        doc.setFont(fontName, 'normal');
-        return fontName;
-      }
-      // Try to load the font
-      const url = './NotoSansTC-Regular.ttf'; // <<— Put your font file here
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('Font file not found at '+url);
-      const buf = await res.arrayBuffer();
-      // Convert to base64
-      const uint = new Uint8Array(buf);
-      let binary = '';
-      for(let i=0;i<uint.length;i++){ binary += String.fromCharCode(uint[i]); }
-      const b64 = btoa(binary);
-      // Register font with jsPDF
-      doc.addFileToVFS('NotoSansTC-Regular.ttf', b64);
-      doc.addFont('NotoSansTC-Regular.ttf', fontName, 'normal');
-      doc.addFont('NotoSansTC-Regular.ttf', fontName, 'bold');
-      doc.setFont(fontName, 'normal');
-      return fontName;
-    }
+async function ensureCJKFont(doc){
+  const fontName = 'NotoSansTC';
+  doc.addFileToVFS('NotoSansTC-Regular.ttf', embeddedFontBase64);
+  doc.addFont('NotoSansTC-Regular.ttf', fontName, 'normal');
+  doc.addFont('NotoSansTC-Regular.ttf', fontName, 'bold');
+  doc.setFont(fontName, 'normal');
+  return fontName;
+}
 
-    // ===== PDF generation =====
-    async function generatePDF(){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit:'mm', format:'a4' });
+async function generatePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const fontName = await ensureCJKFont(doc);
+  const margin = 16;
+  let y = margin;
 
-      // Load and set CJK-safe font so Chinese + Latin align properly
-      const fontName = await ensureCJKFont(doc);
-      const margin = 16; // mm
-      let y = margin;
+  const form = new FormData(document.getElementById('invoiceForm'));
+  const rows = [...document.querySelectorAll('.item-row')].map(row=>{
+    const qty = parseFloat(row.querySelector('[name="qty"]').value)||0;
+    const price = parseFloat(row.querySelector('[name="unitPrice"]').value)||0;
+    const total = qty*price;
+    return { itemNo: row.querySelector('[name="itemNo"]').value, desc: row.querySelector('[name="description"]').value, qty, unitPrice: price, total };
+  });
+  const grandTotal = rows.reduce((s,r)=>s+r.total,0);
 
-      const form = new FormData(document.getElementById('invoiceForm'));
-      const rows = [...document.querySelectorAll('.item-row')].map(row=>{
-        const qty = parseFloat(row.querySelector('[name="qty"]').value)||0;
-        const price = parseFloat(row.querySelector('[name="unitPrice"]').value)||0;
-        const total = qty*price;
-        return {
-          itemNo: row.querySelector('[name="itemNo"]').value || '',
-          desc: row.querySelector('[name="description"]').value || '',
-          qty, unit: row.querySelector('[name="unit"]').value || '',
-          unitPrice: price, total
-        };
-      });
-      const grandTotal = rows.reduce((s,r)=>s+r.total,0);
+  doc.setFont(fontName,'bold').setFontSize(18).text('玲瓏國際 Exquis International', margin, y);
+  doc.setFontSize(22).text('INVOICE 發票', 210 - margin - doc.getTextWidth('INVOICE 發票'), y);
+  y += 10;
 
-      // Header
-      doc.setFont(fontName, 'bold');
-      doc.setFontSize(18);
-      doc.text('玲瓏國際 Exquis International', margin, y);
-      doc.setFontSize(22);
-      doc.text('INVOICE 發票', 210 - margin - doc.getTextWidth('INVOICE 發票'), y);
-      y += 10;
+  doc.setFont(fontName,'normal').setFontSize(12);
+  doc.text(`Invoice No 發票號碼：${form.get('invoiceNo')||''}`, margin, y);
+  doc.text(`Date 日期：${form.get('invoiceDate')||''}`, margin, y+7);
+  y += 18;
 
-      // Invoice meta
-      doc.setFont(fontName, 'normal');
-      doc.setFontSize(12);
-      doc.text(`Invoice No 發票號碼：${form.get('invoiceNo')||''}`, margin, y);
-      doc.text(`Date 日期：${form.get('invoiceDate')||''}`, margin, y+7);
-      y += 18;
+  doc.setFont(fontName, 'bold').text('To 收件人：', margin, y); y+=7;
+  doc.setFont(fontName, 'normal');
+  const toLines = doc.splitTextToSize(form.get('clientTo')||'', 210 - margin*2);
+  doc.text(toLines, margin, y);
+  y += toLines.length*6 + 2;
 
-      // Client
-      doc.setFont(fontName, 'bold');
-      doc.text('To 收件人：', margin, y); y+=7;
-      doc.setFont(fontName, 'normal');
-      const toLines = doc.splitTextToSize(form.get('clientTo')||'', 210 - margin*2);
-      doc.text(toLines, margin, y);
-      y += toLines.length*6 + 2;
+  const addr = (form.get('clientAddress')||'').trim();
+  if(addr){
+    doc.setFont(fontName, 'bold').text('Address 地址：', margin, y); y+=7;
+    doc.setFont(fontName, 'normal');
+    const addrLines = doc.splitTextToSize(addr, 210 - margin*2);
+    doc.text(addrLines, margin, y);
+    y += addrLines.length*6 + 2;
+  }
 
-      const addr = (form.get('clientAddress')||'').trim();
-      if(addr){
-        doc.setFont(fontName, 'bold'); doc.text('Address 地址：', margin, y); y+=7;
-        doc.setFont(fontName, 'normal');
-        const addrLines = doc.splitTextToSize(addr, 210 - margin*2);
-        doc.text(addrLines, margin, y);
-        y += addrLines.length*6 + 2;
-      }
-      const attn = (form.get('clientAttn')||'').trim();
-      if(attn){ doc.text(`Attn 聯絡人：${attn}`, margin, y); y+=10; }
+  const tel = (form.get('clientTel')||'').trim();
+  if(tel){ doc.setFont(fontName,'bold').text('Tel 電話：', margin, y); doc.setFont(fontName,'normal').text(tel, margin+20, y); y+=8; }
 
-      // Table
-      const head = [[ 'Item No.', 'Description / 描述', 'Qty / 數量', 'Unit / 單位', 'Unit Price / 單價', 'Total / 小計' ]];
-      const body = rows.map(r=>[
-        r.itemNo,
-        r.desc,
-        String(r.qty),
-        r.unit,
-        (r.unitPrice).toFixed(2),
-        (r.total).toFixed(2)
-      ]);
+  const attn = (form.get('clientAttn')||'').trim();
+  if(attn){ doc.text(`Attn 聯絡人：${attn}`, margin, y); y+=10; }
 
-      doc.autoTable({
-        startY: y,
-        head, body,
-        styles: { font: fontName, fontSize: 10, cellPadding: 3, lineWidth: 0.1 },
-        headStyles: { fillColor: [44,62,80], textColor: 255, fontStyle: 'bold' },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 18 },
-          1: { cellWidth: 78 },
-          2: { halign: 'right', cellWidth: 20 },
-          3: { halign: 'center', cellWidth: 22 },
-          4: { halign: 'right', cellWidth: 30 },
-          5: { halign: 'right', cellWidth: 30 }
-        },
-        bodyStyles: { valign: 'top' },
-        didParseCell: (data)=>{
-          // Wrap long description nicely
-          if(data.section==='body' && data.column.index===1){
-            data.cell.styles.cellWidth = 78;
-          }
-        },
-        margin: { left: margin, right: margin }
-      });
+  const head = [[ 'Item No.', 'Description / 描述', 'Qty / 數量', 'Unit Price / 單價', 'Total / 小計' ]];
+  const body = rows.map(r=>[ r.itemNo, r.desc, String(r.qty), r.unitPrice.toFixed(2), r.total.toFixed(2) ]);
 
-      const afterTableY = doc.lastAutoTable.finalY + 4;
+  doc.autoTable({ startY: y, head, body, styles: { font: fontName, fontSize: 10, cellPadding: 3 }, headStyles: { fillColor: [44,62,80], textColor: 255, fontStyle: 'bold' }, margin: { left: margin, right: margin } });
+  let afterTableY = doc.lastAutoTable.finalY + 4;
 
-      // Total block
-      doc.setFont(fontName, 'bold');
-      doc.setFontSize(12);
-      const label = 'Total Amount 總金額：';
-      const labelW = doc.getTextWidth(label);
-      const amt = grandTotal.toFixed(2);
-      const amtW = doc.getTextWidth(amt);
-      const xRight = 210 - margin;
-      doc.text(label, xRight - (labelW + amtW + 4), afterTableY + 8);
-      doc.text(amt, xRight - amtW, afterTableY + 8);
+  const payMethod = (form.get('paymentMethod')||'').trim();
+  if(payMethod){
+    doc.setFont(fontName,'bold').text('Payment Method 付款方式：', margin, afterTableY + 6);
+    doc.setFont(fontName,'normal').text(payMethod, margin + 50, afterTableY + 6);
+    afterTableY += 10;
+  }
 
-      // Footer (optional)
-      doc.setFont(fontName, 'normal');
-      doc.setFontSize(9);
-      doc.text('Thank you for your business. 謝謝惠顧。', margin, 297 - margin);
+  doc.setFont(fontName,'bold');
+  const label = 'Total Amount 總金額：';
+  const amt = 'HKD $' + grandTotal.toFixed(2);
+  const labelW = doc.getTextWidth(label);
+  const amtW = doc.getTextWidth(amt);
+  const xRight = 210 - margin;
+  doc.text(label, xRight - (labelW + amtW + 4), afterTableY + 8);
+  doc.text(amt, xRight - amtW, afterTableY + 8);
 
-      // Save
-      const fileName = `Invoice_${(form.get('invoiceNo')||'')}_${(form.get('invoiceDate')||'')}.pdf`;
-      doc.save(fileName);
-    }
-  </script>
+  doc.setFont(fontName, 'normal').setFontSize(9).text('Thank you for your business. 謝謝惠顧。', margin, 297 - margin);
+
+  doc.save(`Invoice_${form.get('invoiceNo')||''}_${form.get('invoiceDate')||''}.pdf`);
+}
+</script>
 </body>
 </html>
