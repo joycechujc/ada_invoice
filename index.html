@@ -224,14 +224,14 @@
       doc.setFont(fontName, 'bold');
       doc.setFontSize(18);
       doc.text('玲瓏國際 Exquis International', margin, y);
-      doc.setFontSize(22);
-      doc.text('INVOICE 發票', 210 - margin - doc.getTextWidth('INVOICE 發票'), y);
-      y += 10;
+      doc.setFontSize(28);
+      doc.text('INVOICE', 210 - margin - doc.getTextWidth('INVOICE'), y);
+      y += 20;
 
       // Invoice meta
       doc.setFont(fontName, 'normal');
       doc.setFontSize(12);
-      doc.text(`Invoice No 發票號碼：${form.get('invoiceNo')||''}`, margin, y);
+      doc.text(`Invoice No 發票號碼：`, margin, y);
       
       // Format date to DD/MM/YYYY
       const dateValue = form.get('invoiceDate') || '';
@@ -244,47 +244,41 @@
         formattedDate = `${day}/${month}/${year}`;
       }
       
-      doc.text(`Date 日期：${formattedDate}`, margin, y+7);
-      y += 18;
+      doc.text(`Date 日期：`, margin, y+8);
+      y += 25;
 
       // Client
-      doc.setFont(fontName, 'bold');
-      const toLabelWidth = doc.getTextWidth('To 收件人：');
-      doc.text('To 收件人：', margin, y);
       doc.setFont(fontName, 'normal');
-      const toLines = doc.splitTextToSize(form.get('clientTo')||'', 210 - margin*2 - toLabelWidth - 5);
-      doc.text(toLines, margin + toLabelWidth + 5, y);
-      y += Math.max(toLines.length*6, 6) + 3;
+      doc.setFontSize(12);
+      doc.text('To:', margin, y);
+      y += 8;
+      
+      const clientTo = form.get('clientTo') || '';
+      if(clientTo) {
+        const toLines = doc.splitTextToSize(clientTo, 210 - margin*2);
+        doc.text(toLines, margin, y);
+        y += toLines.length * 6 + 3;
+      }
 
       const addr = (form.get('clientAddress')||'').trim();
       if(addr){
-        doc.setFont(fontName, 'bold'); 
-        const addrLabelWidth = doc.getTextWidth('Address 地址：');
-        doc.text('Address 地址：', margin, y);
-        doc.setFont(fontName, 'normal');
-        const addrLines = doc.splitTextToSize(addr, 210 - margin*2 - addrLabelWidth - 5);
-        doc.text(addrLines, margin + addrLabelWidth + 5, y);
-        y += Math.max(addrLines.length*6, 6) + 3;
-      }
-
-      const tel = (form.get('clientTel')||'').trim();
-      if(tel){ 
-        doc.setFont(fontName, 'bold'); 
-        doc.text('Tel 電話：', margin, y); 
-        doc.setFont(fontName, 'normal');
-        doc.text(tel, margin + doc.getTextWidth('Tel 電話：') + 5, y); 
-        y += 9; 
+        const addrLines = doc.splitTextToSize(addr, 210 - margin*2);
+        doc.text(addrLines, margin, y);
+        y += addrLines.length * 6 + 3;
       }
 
       const attn = (form.get('clientAttn')||'').trim();
       if(attn){ 
-        doc.setFont(fontName, 'bold'); 
-        doc.text('Attn 聯絡人：', margin, y);
-        doc.setFont(fontName, 'normal');
-        doc.text(attn, margin + doc.getTextWidth('Attn 聯絡人：') + 5, y); 
+        doc.text(attn, margin, y); 
         y += 9; 
+      }
+
+      const tel = (form.get('clientTel')||'').trim();
+      if(tel){ 
+        doc.text(`Phone: ${tel}`, margin, y); 
+        y += 15; 
       } else {
-        y += 3;
+        y += 6;
       }
 
       // Table
