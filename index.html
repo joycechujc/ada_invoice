@@ -231,7 +231,7 @@
       // Invoice meta
       doc.setFont(fontName, 'normal');
       doc.setFontSize(12);
-      doc.text(`Invoice No 發票號碼：`, margin, y);
+      doc.text(`Invoice No 發票號碼：${form.get('invoiceNo')||''}`, margin, y);
       
       // Format date to DD/MM/YYYY
       const dateValue = form.get('invoiceDate') || '';
@@ -244,7 +244,7 @@
         formattedDate = `${day}/${month}/${year}`;
       }
       
-      doc.text(`Date 日期：`, margin, y+8);
+      doc.text(`Date 日期：${formattedDate}`, margin, y+8);
       y += 25;
 
       // Client
