@@ -31,7 +31,7 @@
     textarea{min-height:80px;resize:vertical}
 
     .items h2{display:flex;align-items:center;gap:8px}
-    .item-row{display:grid;grid-template-columns:80px 2fr 80px 100px 120px 40px;gap:12px;align-items:end;margin:12px 0;padding:16px;border:2px solid #eef2f7;border-radius:12px;background:#fff}
+    .item-row{display:grid;grid-template-columns:80px 3fr 80px 100px 120px 40px;gap:12px;align-items:end;margin:12px 0;padding:16px;border:2px solid #eef2f7;border-radius:12px;background:#fff}
     .item-row:hover{border-color:#c7d2fe;transform:translateY(-1px);transition:all .2s}
     .btn{border:0;border-radius:10px;padding:10px 16px;color:#fff;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));cursor:pointer}
     .btn.secondary{background:linear-gradient(135deg,#9ca3af,#6b7280)}
@@ -254,7 +254,7 @@
       doc.setFont(fontName, 'normal');
       const toLines = doc.splitTextToSize(form.get('clientTo')||'', 210 - margin*2 - toLabelWidth - 5);
       doc.text(toLines, margin + toLabelWidth + 5, y);
-      y += Math.max(toLines.length*6, 6) + 12;
+      y += Math.max(toLines.length*6, 6) + 6;
 
       const addr = (form.get('clientAddress')||'').trim();
       if(addr){
@@ -264,7 +264,7 @@
         doc.setFont(fontName, 'normal');
         const addrLines = doc.splitTextToSize(addr, 210 - margin*2 - addrLabelWidth - 5);
         doc.text(addrLines, margin + addrLabelWidth + 5, y);
-        y += Math.max(addrLines.length*6, 6) + 12;
+        y += Math.max(addrLines.length*6, 6) + 6;
       }
 
       const tel = (form.get('clientTel')||'').trim();
@@ -273,7 +273,7 @@
         doc.text('Tel 電話：', margin, y); 
         doc.setFont(fontName, 'normal');
         doc.text(tel, margin + doc.getTextWidth('Tel 電話：') + 5, y); 
-        y += 18; 
+        y += 12; 
       }
 
       const attn = (form.get('clientAttn')||'').trim();
@@ -282,7 +282,7 @@
         doc.text('Attn 聯絡人：', margin, y);
         doc.setFont(fontName, 'normal');
         doc.text(attn, margin + doc.getTextWidth('Attn 聯絡人：') + 5, y); 
-        y += 18; 
+        y += 12; 
       } else {
         y += 6;
       }
