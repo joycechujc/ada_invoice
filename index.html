@@ -31,7 +31,7 @@
     textarea{min-height:80px;resize:vertical}
 
     .items h2{display:flex;align-items:center;gap:8px}
-    .item-row{display:grid;grid-template-columns:80px 2fr 80px 100px 120px 140px 40px;gap:12px;align-items:end;margin:12px 0;padding:16px;border:2px solid #eef2f7;border-radius:12px;background:#fff}
+    .item-row{display:grid;grid-template-columns:80px 2fr 80px 100px 120px 40px;gap:12px;align-items:end;margin:12px 0;padding:16px;border:2px solid #eef2f7;border-radius:12px;background:#fff}
     .item-row:hover{border-color:#c7d2fe;transform:translateY(-1px);transition:all .2s}
     .btn{border:0;border-radius:10px;padding:10px 16px;color:#fff;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));cursor:pointer}
     .btn.secondary{background:linear-gradient(135deg,#9ca3af,#6b7280)}
@@ -84,6 +84,10 @@
         </div>
         <div class="row">
           <div class="group">
+            <label for="clientTel">Tel / 電話</label>
+            <input id="clientTel" name="clientTel" />
+          </div>
+          <div class="group">
             <label for="clientAttn">Attn / 聯絡人</label>
             <input id="clientAttn" name="clientAttn" />
           </div>
@@ -94,6 +98,16 @@
         <h2>📝 Invoice Items</h2>
         <div id="itemsContainer"></div>
         <button class="btn secondary" type="button" id="addItemBtn">Add Item</button>
+      </div>
+
+      <div class="section">
+        <h2>Payment Method / 付款方式</h2>
+        <div class="row">
+          <div class="group full">
+            <label for="paymentMethod">Payment Method / 付款方式</label>
+            <textarea id="paymentMethod" name="paymentMethod" rows="2" placeholder="Bank transfer, Cash, Cheque, etc."></textarea>
+          </div>
+        </div>
       </div>
 
       <div class="total-card">
@@ -129,7 +143,6 @@
         <div class="group"><label>Item No.</label><input name="itemNo" value="${itemCount}"/></div>
         <div class="group"><label>Description / 描述</label><input name="description" required/></div>
         <div class="group"><label>Qty / 數量</label><input type="number" name="qty" min="1" value="1" oninput="calculateTotal()" required/></div>
-        <div class="group"><label>Unit / 單位</label><input name="unit" value="pcs"/></div>
         <div class="group"><label>Unit Price / 單價</label><input type="number" name="unitPrice" min="0" step="0.01" oninput="calculateTotal()" required/></div>
         <div class="group"><label>Total / 小計</label><input name="itemTotal" readonly style="background:#f8fafc"/></div>
         <div class="group"><label>&nbsp;</label><button type="button" class="btn remove" title="Remove" onclick="removeItem(${itemCount})">×</button></div>`;
@@ -201,7 +214,7 @@
         return {
           itemNo: row.querySelector('[name="itemNo"]').value || '',
           desc: row.querySelector('[name="description"]').value || '',
-          qty, unit: row.querySelector('[name="unit"]').value || '',
+          qty,
           unitPrice: price, total
         };
       });
@@ -238,16 +251,33 @@
         doc.text(addrLines, margin, y);
         y += addrLines.length*6 + 2;
       }
+
+      const tel = (form.get('clientTel')||'').trim();
+      if(tel){ 
+        doc.setFont(fontName, 'bold'); 
+        doc.text('Tel 電話：', margin, y); 
+        doc.setFont(fontName, 'normal');
+        doc.text(tel, margin + doc.getTextWidth('Tel 電話：') + 2, y); 
+        y+=7; 
+      }
+
       const attn = (form.get('clientAttn')||'').trim();
-      if(attn){ doc.text(`Attn 聯絡人：${attn}`, margin, y); y+=10; }
+      if(attn){ 
+        doc.setFont(fontName, 'bold'); 
+        doc.text('Attn 聯絡人：', margin, y);
+        doc.setFont(fontName, 'normal');
+        doc.text(attn, margin + doc.getTextWidth('Attn 聯絡人：') + 2, y); 
+        y+=10; 
+      } else {
+        y += 3;
+      }
 
       // Table
-      const head = [[ 'Item No.', 'Description / 描述', 'Qty / 數量', 'Unit / 單位', 'Unit Price / 單價', 'Total / 小計' ]];
+      const head = [[ 'Item No.', 'Description / 描述', 'Qty / 數量', 'Unit Price / 單價', 'Total / 小計' ]];
       const body = rows.map(r=>[
         r.itemNo,
         r.desc,
         String(r.qty),
-        r.unit,
         (r.unitPrice).toFixed(2),
         (r.total).toFixed(2)
       ]);
@@ -255,38 +285,51 @@
       doc.autoTable({
         startY: y,
         head, body,
-        styles: { font: fontName, fontSize: 10, cellPadding: 3, lineWidth: 0.1 },
-        headStyles: { fillColor: [44,62,80], textColor: 255, fontStyle: 'bold' },
+        styles: { font: fontName, fontSize: 10, cellPadding: 3, lineWidth: 0.3, lineColor: [0,0,0] },
+        headStyles: { fillColor: [255,255,255], textColor: [0,0,0], fontStyle: 'bold' },
+        bodyStyles: { fillColor: [255,255,255], textColor: [0,0,0] },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 18 },
-          1: { cellWidth: 78 },
-          2: { halign: 'right', cellWidth: 20 },
-          3: { halign: 'center', cellWidth: 22 },
-          4: { halign: 'right', cellWidth: 30 },
-          5: { halign: 'right', cellWidth: 30 }
+          0: { halign: 'center', cellWidth: 20 },
+          1: { cellWidth: 90 },
+          2: { halign: 'right', cellWidth: 25 },
+          3: { halign: 'right', cellWidth: 30 },
+          4: { halign: 'right', cellWidth: 30 }
         },
         bodyStyles: { valign: 'top' },
         didParseCell: (data)=>{
           // Wrap long description nicely
           if(data.section==='body' && data.column.index===1){
-            data.cell.styles.cellWidth = 78;
+            data.cell.styles.cellWidth = 90;
           }
         },
         margin: { left: margin, right: margin }
       });
 
-      const afterTableY = doc.lastAutoTable.finalY + 4;
+      const afterTableY = doc.lastAutoTable.finalY + 8;
+
+      // Payment Method
+      const paymentMethod = (form.get('paymentMethod')||'').trim();
+      if(paymentMethod){
+        doc.setFont(fontName, 'bold');
+        doc.text('Payment Method 付款方式：', margin, afterTableY);
+        doc.setFont(fontName, 'normal');
+        const paymentLines = doc.splitTextToSize(paymentMethod, 210 - margin*2);
+        doc.text(paymentLines, margin, afterTableY + 7);
+        y = afterTableY + 7 + paymentLines.length*6 + 4;
+      } else {
+        y = afterTableY;
+      }
 
       // Total block
       doc.setFont(fontName, 'bold');
       doc.setFontSize(12);
-      const label = 'Total Amount 總金額：';
+      const label = 'Total Amount 總金額：HKD $ ';
       const labelW = doc.getTextWidth(label);
       const amt = grandTotal.toFixed(2);
       const amtW = doc.getTextWidth(amt);
       const xRight = 210 - margin;
-      doc.text(label, xRight - (labelW + amtW + 4), afterTableY + 8);
-      doc.text(amt, xRight - amtW, afterTableY + 8);
+      doc.text(label, xRight - (labelW + amtW), y + 8);
+      doc.text(amt, xRight - amtW, y + 8);
 
       // Footer (optional)
       doc.setFont(fontName, 'normal');
