@@ -1,67 +1,477 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.6">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 11.0px 'Helvetica Neue'; color: #000000; color: rgba(0, 0, 0, 0.85); -webkit-text-stroke: rgba(0, 0, 0, 0.85); background-color: #b3b3b3}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 11.0px 'Helvetica Neue'; color: #000000; color: rgba(0, 0, 0, 0.85); -webkit-text-stroke: rgba(0, 0, 0, 0.85); background-color: #b3b3b3; min-height: 13.0px}
-    span.s1 {font-kerning: none}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator - 玲瓏國際 Exquis International</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h2::before {
+            content: "📋";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input, textarea, select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .items-section {
+            margin-top: 30px;
+        }
+
+        .items-section h2::before {
+            content: "📝";
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 80px 2fr 80px 100px 120px 120px 50px;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #f1f3f4;
+        }
+
+        .item-row:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            font-size: 1.1em;
+            padding: 15px 30px;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px;
+            margin-top: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .total-section h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .total-amount {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .item-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="zh-Hant"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;發票生成器&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="style.css"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;body&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;h1&gt;發票生成器&lt;/h1&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;!-- 表單輸入區 --&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="form-container"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;公司名稱：&lt;input type="text" id="companyName" placeholder="輸入公司名稱"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;客戶名稱：&lt;input type="text" id="clientName" placeholder="輸入客戶名稱"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;發票號碼：&lt;input type="text" id="invoiceNumber" placeholder="INV-001"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;日期：&lt;input type="date" id="invoiceDate"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;品項描述：&lt;input type="text" id="itemDesc" placeholder="商品或服務"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;數量：&lt;input type="number" id="itemQty" value="1"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;單價：&lt;input type="number" id="itemPrice" value="0"&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;button onclick="addItem()"&gt;新增品項&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;!-- 預覽區 --&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="invoice"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h2 id="previewCompany"&gt;公司名稱&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;&lt;strong&gt;客戶名稱：&lt;/strong&gt;&lt;span id="previewClient"&gt;---&lt;/span&gt;&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;&lt;strong&gt;發票號碼：&lt;/strong&gt;&lt;span id="previewNumber"&gt;---&lt;/span&gt;&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;&lt;strong&gt;日期：&lt;/strong&gt;&lt;span id="previewDate"&gt;---&lt;/span&gt;&lt;/p&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;table&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;thead&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;th&gt;品項&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;th&gt;數量&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;th&gt;單價&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;th&gt;總計&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/thead&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;tbody id="itemList"&gt;&lt;/tbody&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/table&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h3&gt;總金額：$&lt;span id="totalAmount"&gt;0&lt;/span&gt;&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;button onclick="generatePDF()"&gt;下載 PDF&lt;/button&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"&gt;&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="script.js"&gt;&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+    <div class="container">
+        <div class="header">
+            <h1>玲瓏國際 Exquis International</h1>
+            <p>Invoice Generator</p>
+        </div>
+
+        <div class="form-container">
+            <form id="invoiceForm">
+                <!-- Invoice Header Section -->
+                <div class="form-section">
+                    <h2>Invoice Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoiceNo">Invoice No.</label>
+                            <input type="text" id="invoiceNo" name="invoiceNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="invoiceDate">Date</label>
+                            <input type="date" id="invoiceDate" name="invoiceDate" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Client Information Section -->
+                <div class="form-section">
+                    <h2>Client Information</h2>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="clientTo">To</label>
+                            <input type="text" id="clientTo" name="clientTo" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="clientAddress">Address</label>
+                            <textarea id="clientAddress" name="clientAddress" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientAttn">Attn</label>
+                            <input type="text" id="clientAttn" name="clientAttn">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Items Section -->
+                <div class="form-section items-section">
+                    <h2>Invoice Items</h2>
+                    <div id="itemsContainer">
+                        <!-- Items will be added dynamically -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addItem()">Add Item</button>
+                </div>
+
+                <!-- Total Section -->
+                <div class="total-section">
+                    <h3>Total Amount</h3>
+                    <div class="total-amount" id="totalAmount">$0.00</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-success" onclick="generatePDF()">Generate PDF Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let itemCount = 0;
+
+        // Initialize with one item
+        window.onload = function() {
+            addItem();
+            document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+        };
+
+        function addItem() {
+            itemCount++;
+            const container = document.getElementById('itemsContainer');
+            const itemRow = document.createElement('div');
+            itemRow.className = 'item-row';
+            itemRow.id = `item-${itemCount}`;
+            
+            itemRow.innerHTML = `
+                <div class="form-group">
+                    <label>Item No.</label>
+                    <input type="text" name="itemNo" value="${itemCount}">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" required>
+                </div>
+                <div class="form-group">
+                    <label>Qty</label>
+                    <input type="number" name="qty" min="1" value="1" onchange="calculateTotal()" required>
+                </div>
+                <div class="form-group">
+                    <label>Unit</label>
+                    <input type="text" name="unit" value="pcs">
+                </div>
+                <div class="form-group">
+                    <label>Unit Price</label>
+                    <input type="number" name="unitPrice" min="0" step="0.01" onchange="calculateTotal()" required>
+                </div>
+                <div class="form-group">
+                    <label>Total</label>
+                    <input type="number" name="itemTotal" readonly style="background: #f8f9fa;">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="button" class="remove-btn" onclick="removeItem(${itemCount})" title="Remove Item">×</button>
+                </div>
+            `;
+            
+            container.appendChild(itemRow);
+            calculateTotal();
+        }
+
+        function removeItem(id) {
+            const item = document.getElementById(`item-${id}`);
+            if (item && document.querySelectorAll('.item-row').length > 1) {
+                item.remove();
+                calculateTotal();
+            }
+        }
+
+        function calculateTotal() {
+            let grandTotal = 0;
+            const itemRows = document.querySelectorAll('.item-row');
+            
+            itemRows.forEach(row => {
+                const qty = parseFloat(row.querySelector('input[name="qty"]').value) || 0;
+                const unitPrice = parseFloat(row.querySelector('input[name="unitPrice"]').value) || 0;
+                const itemTotal = qty * unitPrice;
+                
+                row.querySelector('input[name="itemTotal"]').value = itemTotal.toFixed(2);
+                grandTotal += itemTotal;
+            });
+            
+            document.getElementById('totalAmount').textContent = `$${grandTotal.toFixed(2)}`;
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Get form data
+            const formData = new FormData(document.getElementById('invoiceForm'));
+            
+            // Set up fonts and styling
+            doc.setFont("helvetica");
+            
+            // Header
+            doc.setFontSize(20);
+            doc.setFont("helvetica", "bold");
+            doc.text("玲瓏國際 Exquis International", 20, 25);
+            
+            doc.setFontSize(16);
+            doc.text("INVOICE", 160, 25);
+            
+            // Invoice details
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Invoice No: ${formData.get('invoiceNo')}`, 20, 45);
+            doc.text(`Date: ${formData.get('invoiceDate')}`, 20, 55);
+            
+            // Client information
+            doc.setFont("helvetica", "bold");
+            doc.text("To:", 20, 75);
+            doc.setFont("helvetica", "normal");
+            doc.text(formData.get('clientTo'), 20, 85);
+            
+            if (formData.get('clientAddress')) {
+                const address = formData.get('clientAddress').split('\n');
+                let yPos = 95;
+                address.forEach(line => {
+                    doc.text(line, 20, yPos);
+                    yPos += 10;
+                });
+            }
+            
+            if (formData.get('clientAttn')) {
+                doc.text(`Attn: ${formData.get('clientAttn')}`, 20, 115);
+            }
+            
+            // Items table header
+            let yPos = 140;
+            doc.setFont("helvetica", "bold");
+            doc.text("Item No.", 20, yPos);
+            doc.text("Description", 50, yPos);
+            doc.text("Qty", 120, yPos);
+            doc.text("Unit", 140, yPos);
+            doc.text("Unit Price", 160, yPos);
+            doc.text("Total", 185, yPos);
+            
+            // Draw line under header
+            doc.line(20, yPos + 2, 200, yPos + 2);
+            yPos += 15;
+            
+            // Items
+            doc.setFont("helvetica", "normal");
+            const itemRows = document.querySelectorAll('.item-row');
+            let grandTotal = 0;
+            
+            itemRows.forEach(row => {
+                const itemNo = row.querySelector('input[name="itemNo"]').value;
+                const description = row.querySelector('input[name="description"]').value;
+                const qty = row.querySelector('input[name="qty"]').value;
+                const unit = row.querySelector('input[name="unit"]').value;
+                const unitPrice = parseFloat(row.querySelector('input[name="unitPrice"]').value);
+                const itemTotal = parseFloat(row.querySelector('input[name="itemTotal"]').value);
+                
+                doc.text(itemNo, 20, yPos);
+                doc.text(description.substring(0, 25), 50, yPos);
+                doc.text(qty, 120, yPos);
+                doc.text(unit, 140, yPos);
+                doc.text(`$${unitPrice.toFixed(2)}`, 160, yPos);
+                doc.text(`$${itemTotal.toFixed(2)}`, 185, yPos);
+                
+                grandTotal += itemTotal;
+                yPos += 10;
+                
+                // Check if we need a new page
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 30;
+                }
+            });
+            
+            // Total
+            yPos += 10;
+            doc.line(20, yPos, 200, yPos);
+            yPos += 10;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("Total Amount:", 140, yPos);
+            doc.text(`$${grandTotal.toFixed(2)}`, 185, yPos);
+            
+            // Save the PDF
+            const fileName = `Invoice_${formData.get('invoiceNo')}_${formData.get('invoiceDate')}.pdf`;
+            doc.save(fileName);
+        }
+    </script>
 </body>
 </html>
